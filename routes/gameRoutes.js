@@ -14,7 +14,7 @@ const authMiddleware = require('../middleware/authMiddleware');
  * @swagger
  * /api/game/save:
  *   post:
- *     summary: Save the current game state
+ *     summary: Save the current game state (shallow merge)
  *     tags: [Game]
  *     security:
  *       - bearerAuth: []
@@ -25,46 +25,71 @@ const authMiddleware = require('../middleware/authMiddleware');
  *           schema:
  *             type: object
  *             properties:
- *               campaignId:  { type: string, description: "When provided and player piles are empty, seed deck/hand from Campaign.playerSetup" }
- *               roomIndex:   { type: number }
- *               // --- run-scoped additive state (do not mutate campaign baselines) ---
- *               money:       { type: number, description: "Run currency" }
+ *               campaignId:
+ *                 type: string
+ *                 description: When provided and player piles are empty, seed from Campaign.playerSetup
+ *               roomIndex:
+ *                 type: number
+ *               money:
+ *                 type: number
  *               extraDeck:
  *                 type: array
- *                 description: "Run-only additive deck entries"
+ *                 description: Run-only additive deck entries
  *                 items:
  *                   type: object
  *                   properties:
- *                     cardId: { type: string }
- *                     qty:    { type: integer, minimum: 1, maximum: 30, default: 1 }
+ *                     cardId:
+ *                       type: string
+ *                     qty:
+ *                       type: integer
+ *                       minimum: 1
+ *                       maximum: 30
+ *                       default: 1
  *               extraStats:
  *                 type: object
- *                 description: "Run-only additive stat deltas; allow negatives"
+ *                 description: Run-only additive stat deltas; allow negatives
  *                 properties:
- *                   attackPower:       { type: number, default: 0 }
- *                   physicalPower:     { type: number, default: 0 }
- *                   supernaturalPower: { type: number, default: 0 }
- *                   durability:        { type: number, default: 0 }
- *                   vitality:          { type: number, default: 0 }
- *                   intelligence:      { type: number, default: 0 }
- *                   speed:             { type: number, default: 0 }
- *                   sp:                { type: number, default: 0 }
- *                   maxSp:             { type: number, default: 0 }
- *                   hp:                { type: number, default: 0, description: "Optional additive HP delta" }
- *               // legacy/compat fields (optional)
- *               playerStats:  { type: object }
- *               enemy:        { type: object }
- *               deck:         { type: array, items: { type: object } }
- *               hand:         { type: array, items: { type: object } }
- *               selectedCards:{ type: array, items: { type: object } }
- *               discardPile:  { type: array, items: { type: object } }
- *               campaign:     { type: object }
- *               gold:         { type: number, deprecated: true, description: "Legacy currency; prefer 'money'" }
+ *                   attackPower:        { type: number, default: 0 }
+ *                   physicalPower:      { type: number, default: 0 }
+ *                   supernaturalPower:  { type: number, default: 0 }
+ *                   durability:         { type: number, default: 0 }
+ *                   vitality:           { type: number, default: 0 }
+ *                   intelligence:       { type: number, default: 0 }
+ *                   speed:              { type: number, default: 0 }
+ *                   sp:                 { type: number, default: 0 }
+ *                   maxSp:              { type: number, default: 0 }
+ *                   hp:                 { type: number, default: 0, description: Optional additive HP delta }
+ *               playerStats:
+ *                 type: object
+ *               enemy:
+ *                 type: object
+ *               deck:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *               hand:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *               selectedCards:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *               discardPile:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *               campaign:
+ *                 type: object
+ *               gold:
+ *                 type: number
+ *                 deprecated: true
+ *                 description: Legacy currency; prefer "money"
  *     responses:
- *       200:
+ *       '200':
  *         description: Game state updated
- *       400:
- *         description: Bad request
+ *       '400':
+ *         description: Bad request (e.g., empty body)
  */
 router.post('/save', authMiddleware, saveState);
 
@@ -72,7 +97,7 @@ router.post('/save', authMiddleware, saveState);
  * @swagger
  * /api/game/save:
  *   patch:
- *     summary: Patch (partially update) the saved game
+ *     summary: Partially update the saved game (PATCH)
  *     tags: [Game]
  *     security:
  *       - bearerAuth: []
@@ -82,33 +107,38 @@ router.post('/save', authMiddleware, saveState);
  *         application/json:
  *           schema:
  *             type: object
- *             description: "Provide only the fields you want to update. Common run-scoped updates below:"
+ *             description: Provide only the fields you want to update
  *             properties:
- *               money: { type: number }
+ *               money:
+ *                 type: number
  *               extraDeck:
  *                 type: array
  *                 items:
  *                   type: object
  *                   properties:
- *                     cardId: { type: string }
- *                     qty:    { type: integer, minimum: 1, maximum: 30 }
+ *                     cardId:
+ *                       type: string
+ *                     qty:
+ *                       type: integer
+ *                       minimum: 1
+ *                       maximum: 30
  *               extraStats:
  *                 type: object
  *                 properties:
- *                   attackPower:       { type: number }
- *                   physicalPower:     { type: number }
- *                   supernaturalPower: { type: number }
- *                   durability:        { type: number }
- *                   vitality:          { type: number }
- *                   intelligence:      { type: number }
- *                   speed:             { type: number }
- *                   sp:                { type: number }
- *                   maxSp:             { type: number }
- *                   hp:                { type: number }
+ *                   attackPower:        { type: number }
+ *                   physicalPower:      { type: number }
+ *                   supernaturalPower:  { type: number }
+ *                   durability:         { type: number }
+ *                   vitality:           { type: number }
+ *                   intelligence:       { type: number }
+ *                   speed:              { type: number }
+ *                   sp:                 { type: number }
+ *                   maxSp:              { type: number }
+ *                   hp:                 { type: number }
  *     responses:
- *       200:
+ *       '200':
  *         description: Game state patched
- *       400:
+ *       '400':
  *         description: No game data provided
  */
 router.patch('/save', authMiddleware, patchState);
