@@ -42,6 +42,7 @@ const CampaignSchema = new mongoose.Schema({
   length:      { type: Number, min: 1, max: 100, default: 10 },
   owner:       { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
   likes:       { type: Number, default: 0 },
+  likedByEmails: [{ type: String, lowercase: true, trim: true }],
   playerSetup: {
     startingDeck: { type: [DeckEntrySchema], default: [] }, // array of { cardId, qty }
     startingHandSize: { type: Number, min: 0, max: 10, default: 5 },

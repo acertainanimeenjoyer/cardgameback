@@ -4,6 +4,7 @@ const Enemy = require('../models/Enemy');
 const Campaign = require('../models/Campaign');
 const Room = require('../models/Room');
 const SavedGame = require('../models/SavedGame');
+const User = require('../models/User');
 
 // ---- Popularity (playing now) with in-memory heartbeats ----
 const HEARTBEAT_TTL_MS = 90 * 1000; // consider "online" if pinged within last 90s
@@ -41,31 +42,40 @@ const heartbeat = async (req, res) => {
   }
 };
 
-// POST /api/campaigns/:id/like  (toggle like/unlike for this user)
+// POST /api/campaigns/:id/like  (toggle like/unlike for this user via EMAIL)
 const likeCampaign = async (req, res) => {
   try {
     if (!req.user?._id) return res.status(401).json({ message: 'Authentication required' });
     const { id } = req.params;
-    const uid = req.user._id;
+
+    // Resolve current user's email (anchor)
+    const u = await User.findById(req.user._id, 'email').lean();
+    const email = (u?.email || '').toLowerCase().trim();
+    if (!email) return res.status(400).json({ message: 'Email not found' });
 
     // Read current like state
-    const cur = await Campaign.findById(id, 'likes likedBy').lean();
+    const cur = await Campaign.findById(id, 'likes likedBy likedByEmails').lean();
     if (!cur) return res.status(404).json({ message: 'Not found' });
-    const hasLiked = Array.isArray(cur.likedBy) && cur.likedBy.some(u => String(u) === String(uid));
 
-    // Toggle atomically
+    // Support both legacy likedBy (ObjectIds) and new likedByEmails (strings)
+    const likedByEmails = Array.isArray(cur.likedByEmails) ? cur.likedByEmails : [];
+    const hasLiked = likedByEmails.includes(email);
+
+    // Toggle atomically (no dupes thanks to $addToSet)
     const update = hasLiked
-      ? { $pull: { likedBy: uid }, $inc: { likes: -1 } }
-      : { $addToSet: { likedBy: uid }, $inc: { likes: 1 } };
+      ? { $pull: { likedByEmails: email }, $inc: { likes: -1 } }
+      : { $addToSet: { likedByEmails: email }, $inc: { likes: 1 } };
 
-    const doc = await Campaign.findByIdAndUpdate(id, update, { new: true, projection: 'likes likedBy' });
+    const doc = await Campaign.findByIdAndUpdate(id, update, { new: true, projection: 'likes likedByEmails' });
     if (!doc) return res.status(404).json({ message: 'Not found' });
+
     const likes = Math.max(0, Number(doc.likes || 0));
     return res.json({ liked: !hasLiked, likes });
   } catch (e) {
     return res.status(500).json({ message: 'Failed to like' });
   }
 };
+
 
 // --- Fallback generator
 const getDefaultCampaign = async (req, res) => {
