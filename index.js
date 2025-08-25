@@ -1,5 +1,30 @@
 // index.js
 require('dotenv').config();
+// ===== DIAGNOSTIC (add at very top, commit, and deploy once) =====
+const fs = require('fs');
+const path = require('path');
+
+try {
+  const expressPkgPath = require.resolve('express/package.json');
+  const expressPkg = require(expressPkgPath);
+  const libDir = path.join(path.dirname(expressPkgPath), 'lib');
+
+  console.log('Express version:', expressPkg.version);
+  console.log('Express lib dir:', libDir);
+  console.log('lib exists?', fs.existsSync(libDir));
+  if (fs.existsSync(libDir)) {
+    console.log('lib contents:', fs.readdirSync(libDir));
+    const routerDir = path.join(libDir, 'router');
+    console.log('router dir exists?', fs.existsSync(routerDir));
+    if (fs.existsSync(routerDir)) {
+      console.log('router contents:', fs.readdirSync(routerDir));
+    }
+  }
+} catch (e) {
+  console.error('Express diagnostics failed:', e);
+}
+// ===== END DIAGNOSTIC =====
+
 const express = require('express');
 const cors = require('cors');
 
