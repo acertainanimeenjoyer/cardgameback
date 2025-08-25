@@ -44,13 +44,17 @@ const allowedOrigins = [
   'https://cardgamefront.vercel.app',
   /^https:\/\/cardgamefront-git-.*\.vercel\.app$/, // preview deployments
   // 'https://your-custom-domain.com', // add if you have one
+  'https://cardgameback-1.onrender.com',           // Swagger UI host (same origin as API)
+  'http://localhost:5000'    
 ];
 
 app.use(cors({
   origin(origin, cb) {
     if (!origin) return cb(null, true); // server-to-server, curl, health checks
     const ok = allowedOrigins.some(o => (o instanceof RegExp ? o.test(origin) : o === origin));
-    cb(ok ? null : new Error('CORS blocked'), ok);
+    if (ok) return cb(null, true);
+    console.warn('[CORS] blocked origin:', origin);
+    return cb(null, false); // do NOT throw -> avoids 500, browser will block
   },
   methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization'],
