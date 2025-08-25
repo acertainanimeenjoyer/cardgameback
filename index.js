@@ -10,7 +10,7 @@ const allowedOrigins = [
   'http://localhost:5173',
   'https://cardgamefront.vercel.app',
   /^https:\/\/cardgamefront-git-.*\.vercel\.app$/,
-  // 'https://yourdomain.com',
+  // 'https://cardgameback.onrender.com',
 ];
 app.use(cors({
   origin(origin, cb) {
