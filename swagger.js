@@ -9,7 +9,7 @@ const options = {
       description: 'Full API documentation for the JRPG Cardgame app.',
     },
     servers: [
-      { url: 'https://cardgameback-1.onrender.com/api', description: 'Render backend' }
+      { url: 'https://cardgameback-1.onrender.com', description: 'Render backend' }
     ],
     components: {
       securitySchemes: {
