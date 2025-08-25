@@ -41,14 +41,27 @@ const heartbeat = async (req, res) => {
   }
 };
 
-// POST /api/campaigns/:id/like
+// POST /api/campaigns/:id/like  (toggle like/unlike for this user)
 const likeCampaign = async (req, res) => {
   try {
     if (!req.user?._id) return res.status(401).json({ message: 'Authentication required' });
     const { id } = req.params;
-    const doc = await Campaign.findByIdAndUpdate(id, { $inc: { likes: 1 } }, { new: true });
+    const uid = req.user._id;
+
+    // Read current like state
+    const cur = await Campaign.findById(id, 'likes likedBy').lean();
+    if (!cur) return res.status(404).json({ message: 'Not found' });
+    const hasLiked = Array.isArray(cur.likedBy) && cur.likedBy.some(u => String(u) === String(uid));
+
+    // Toggle atomically
+    const update = hasLiked
+      ? { $pull: { likedBy: uid }, $inc: { likes: -1 } }
+      : { $addToSet: { likedBy: uid }, $inc: { likes: 1 } };
+
+    const doc = await Campaign.findByIdAndUpdate(id, update, { new: true, projection: 'likes likedBy' });
     if (!doc) return res.status(404).json({ message: 'Not found' });
-    return res.json({ likes: doc.likes });
+    const likes = Math.max(0, Number(doc.likes || 0));
+    return res.json({ liked: !hasLiked, likes });
   } catch (e) {
     return res.status(500).json({ message: 'Failed to like' });
   }
