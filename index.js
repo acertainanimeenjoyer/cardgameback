@@ -62,6 +62,7 @@ app.options('*', cors());
 connectDB();
 
 // Health checks
+app.get('/', (_, res) => res.send('API is alive ✅ Try /api/health'));
 app.get('/health', (_, res) => res.json({ ok: true }));
 app.get('/api/health', (_, res) => res.json({ ok: true }));
 
